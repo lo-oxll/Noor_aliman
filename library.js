@@ -87,7 +87,7 @@
 
   /* ---------- الأدعية والزيارات ---------- */
   function duaIndex(kind) {
-    load('data/duas/index.json').then(function (idx) {
+    load('duas/index.json').then(function (idx) {
       clear();
       var isZ = kind === 'ziyarat';
       lib.appendChild(topbar('#/', 'الرئيسية', isZ ? 'الزيارات' : 'الأدعية'));
@@ -108,7 +108,7 @@
     }).catch(fail);
   }
   function duaRead(kind, id) {
-    Promise.all([load('data/duas/index.json'), load('data/duas/' + id + '.json')]).then(function (r) {
+    Promise.all([load('duas/index.json'), load('duas/' + id + '.json')]).then(function (r) {
       var meta = r[0].filter(function (x) { return x.id === id; })[0];
       if (!meta) return fail();
       clear();
@@ -136,7 +136,7 @@
     lib.appendChild(nahjTabs(''));
   }
   function nahjList(part) {
-    load('data/nahj/' + part + '.json').then(function (rows) {
+    load('nahj/' + part + '.json').then(function (rows) {
       clear();
       lib.appendChild(topbar('#/nahj', 'نهج البلاغة', NAHJ[part]));
       lib.appendChild(nahjTabs(part));
@@ -164,7 +164,7 @@
     }).catch(fail);
   }
   function nahjRead(part, n) {
-    load('data/nahj/' + part + '.json').then(function (rows) {
+    load('nahj/' + part + '.json').then(function (rows) {
       var i = rows.findIndex(function (r) { return String(r[0]) === n; });
       if (i < 0) return fail();
       var r = rows[i]; clear();
@@ -185,7 +185,7 @@
 
   /* ---------- غرر الحكم ---------- */
   function ghurarHome() {
-    load('data/ghurar/index.json').then(function (idx) {
+    load('ghurar/index.json').then(function (idx) {
       clear();
       lib.appendChild(topbar('#/', 'الرئيسية', 'غرر الحكم ودرر الكلم'));
       lib.appendChild(el('p', 'note', 'للآمدي — مرتّب حسب الموضوعات (تصنيف مصطفى درايتي).'));
@@ -195,7 +195,7 @@
         if (q.length < 2) { box.hidden = false; return; }
         box.hidden = true;
         res.appendChild(el('p', 'msg', 'جارٍ البحث…'));
-        Promise.all(idx.map(function (b) { return load('data/ghurar/' + b.id + '.json'); })).then(function (all) {
+        Promise.all(idx.map(function (b) { return load('ghurar/' + b.id + '.json'); })).then(function (all) {
           res.textContent = '';
           var out = [];
           all.forEach(function (d, bi) { d.groups.forEach(function (g) { g.i.forEach(function (it) { if (norm(it[1]).indexOf(q) > -1) out.push([it, bi]); }); }); });
@@ -218,7 +218,7 @@
     }).catch(fail);
   }
   function ghurarBab(id) {
-    Promise.all([load('data/ghurar/index.json'), load('data/ghurar/' + id + '.json')]).then(function (r) {
+    Promise.all([load('ghurar/index.json'), load('ghurar/' + id + '.json')]).then(function (r) {
       var meta = r[0].filter(function (x) { return String(x.id) === id; })[0];
       if (!meta) return fail();
       clear();
