@@ -104,7 +104,7 @@
         var sec = el('div'); sec.appendChild(el('h3', 'grp', g[0])); box.appendChild(sec);
         filters.push(listView(items, sec));
       });
-      if (isZ) lib.appendChild(el('p', 'note', 'الزيارات المتوفرة حالياً: عاشوراء، الأربعين، وارث، الجامعة الكبيرة، آل ياسين.'));
+      if (isZ) lib.appendChild(el('p', 'note', 'زيارات النبي والزهراء والأئمة (ع) وغيرهم؛ نصوص بعضها مأخوذة من المزار الكبير ومصباح المتهجد وتبدأ أحياناً بإسناد الرواية.'));
     }).catch(fail);
   }
   function duaRead(kind, id) {
@@ -114,6 +114,7 @@
       clear();
       lib.appendChild(topbar('#/' + kind, kind === 'ziyarat' ? 'الزيارات' : 'الأدعية', ''));
       lib.appendChild(el('h2', 'rtitle', meta.t));
+      if (meta.s) lib.appendChild(el('p', 'subtitle', 'المصدر: ' + meta.s));
       lib.appendChild(fontTools());
       var body = el('article', 'reader');
       r[1].forEach(function (l) { body.appendChild(el('p', null, l)); });
@@ -242,6 +243,58 @@
     }).catch(fail);
   }
 
+
+  /* ---------- مفاتيح الجنان ---------- */
+  function mafatihHome() {
+    load('mafatih/index.json').then(function (idx) {
+      clear();
+      lib.appendChild(topbar('#/', 'الرئيسية', 'مفاتيح الجنان'));
+      lib.appendChild(el('p', 'note', 'للشيخ عباس القمي (رحمه الله)، ويليه «الباقيات الصالحات».'));
+      var last = '';
+      idx.forEach(function (sx) {
+        if (sx.g !== last) { lib.appendChild(el('h3', 'grp', sx.g)); last = sx.g; }
+        var a = link('#/mafatih/' + sx.id, 'row'); a.appendChild(el('span', 'rt', sx.t));
+        a.appendChild(el('small', 'rs', sx.h.length + ' فصل')); lib.appendChild(a);
+      });
+    }).catch(fail);
+  }
+  function mafatihSec(sid) {
+    load('mafatih/index.json').then(function (idx) {
+      var sx = idx.filter(function (x) { return String(x.id) === sid; })[0];
+      if (!sx) return fail();
+      clear();
+      lib.appendChild(topbar('#/mafatih', 'مفاتيح الجنان', ''));
+      lib.appendChild(el('h2', 'rtitle', sx.t));
+      var holder = el('div');
+      var items = sx.h.map(function (h) { return { href: '#/mafatih/' + sx.id + '/' + h[0], title: h[1] }; });
+      var f = listView(items, holder);
+      lib.appendChild(searchBox('ابحث في العناوين…', f)); lib.appendChild(holder);
+    }).catch(fail);
+  }
+  function mafatihRead(sid, hid) {
+    Promise.all([load('mafatih/index.json'), load('mafatih/' + sid + '.json')]).then(function (r) {
+      var sx = r[0].filter(function (x) { return String(x.id) === sid; })[0];
+      var heads = r[1], i = heads.findIndex(function (h) { return String(h.id) === hid; });
+      if (!sx || i < 0) return fail();
+      var h = heads[i]; clear();
+      lib.appendChild(topbar('#/mafatih/' + sid, sx.t, ''));
+      lib.appendChild(el('h2', 'rtitle', h.t));
+      lib.appendChild(fontTools());
+      var body = el('article', 'reader');
+      h.x.forEach(function (it) {
+        var t = it[1].replace(/^\(\(|\)\)$/g, '').trim();
+        if (t && t !== h.t && t.length < 160) body.appendChild(el('h3', 'sub', t));
+        it[2].forEach(function (p) { body.appendChild(el('p', it[0] === 'رواية' ? 'rw' : null, p)); });
+      });
+      lib.appendChild(body);
+      var nav = el('div', 'pager');
+      if (i > 0) nav.appendChild(link('#/mafatih/' + sid + '/' + heads[i - 1].id, 'pg', '‹ السابق'));
+      if (i < heads.length - 1) nav.appendChild(link('#/mafatih/' + sid + '/' + heads[i + 1].id, 'pg', 'التالي ›'));
+      lib.appendChild(nav);
+      window.scrollTo(0, 0);
+    }).catch(fail);
+  }
+
   /* ---------- توقع الأهلة ---------- */
   var ZONE = { A: 'ممكنة الرؤية بالعين المجردة', B: 'ممكنة بالعين المجردة أو بالمنظار — وقد لا تثبت', C: 'ممكنة بالمنظار فقط', D: 'غير ممكنة الرؤية' };
   var fmtD = new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -255,7 +308,6 @@
     year = year || cur.year;
     clear();
     lib.appendChild(topbar('#/', 'الرئيسية', 'توقع الأهلة'));
-    lib.appendChild(hilalTabs('moon'));
     lib.appendChild(el('p', 'note', 'حساب فلكي تلقائي لإمكان رؤية هلال كل شهر مساء التاسع والعشرين (النجف الأشرف، معيار Odeh). هو تقدير فقط؛ الثابت شرعاً ما ثبت بالرؤية وإعلان المرجعية.'));
     var sel = el('select', 'yearsel'); sel.setAttribute('aria-label', 'السنة الهجرية');
     for (var y = cur.year; y <= 1550; y++) { var o = el('option', null, y + ' هـ'); o.value = y; if (y === year) o.selected = true; sel.appendChild(o); }
@@ -285,111 +337,6 @@
     if (!any) lib.appendChild(el('p', 'msg', 'لا بيانات لهذه السنة.'));
   }
 
-
-  /* ---------- أقسام الأهلة الفرعية ---------- */
-  function hilalTabs(cur) {
-    var t = el('div', 'tabs');
-    [['moon', 'الأهلة', '#/hilal'], ['scorpio', 'القمر في العقرب', '#/hilal/scorpio']].forEach(function (x) {
-      t.appendChild(link(x[2], x[0] === cur ? 'on' : '', x[1]));
-    });
-    return t;
-  }
-  var fmtDT = new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-  function durText(ms) {
-    var h = Math.round(ms / 3600000), d = Math.floor(h / 24), r = h % 24;
-    return (d ? d + ' يوم و' : '') + r + ' ساعة';
-  }
-  function scorpioNow() {
-    var now = Date.now(), p = Hilal.scorpioPeriods(now, now + 35 * DAY).filter(function (x) { return x.exit > now; })[0];
-    if (!p) return null;
-    var box = el('div', 'scnow');
-    if (p.enter <= now) { box.appendChild(el('b', null, 'القمر الآن في العقرب')); box.appendChild(el('span', null, 'يخرج منه ' + fmtDT.format(new Date(p.exit)))); box.classList.add('inside'); }
-    else { box.appendChild(el('b', null, 'القمر لم يدخل العقرب بعد')); box.appendChild(el('span', null, 'يدخل ' + fmtDT.format(new Date(p.enter)) + ' ويخرج ' + fmtDT.format(new Date(p.exit)))); }
-    return box;
-  }
-  function scorpioView(year) {
-    Hilal.extendTo(Date.UTC(2135, 0, 1));
-    Hilal.fillEve();
-    var L = Hilal.months(), d0 = new Date();
-    var cur = window.__hijri(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), d0.getUTCDate(), 12));
-    year = year || cur.year;
-    clear();
-    lib.appendChild(topbar('#/', 'الرئيسية', 'توقع الأهلة'));
-    lib.appendChild(hilalTabs('scorpio'));
-    var nb = scorpioNow(); if (nb) lib.appendChild(nb);
-    lib.appendChild(el('p', 'note', 'دخول القمر في برج العقرب وخروجه منه (البروج المدارية: العقرب من ٢١٠° إلى ٢٤٠° من خط طول القمر)، بتوقيت بغداد والنجف. حساب فلكي بدقة تقارب دقائق، وتُعدّ الأشهر هنا حسب أيامها المدنية. ما يترتب على ذلك من أحكام يُرجع فيه إلى المصادر والمرجعية.'));
-    var sel = el('select', 'yearsel'); sel.setAttribute('aria-label', 'السنة الهجرية');
-    for (var y = cur.year; y <= 1550; y++) { var o = el('option', null, y + ' هـ'); o.value = y; if (y === year) o.selected = true; sel.appendChild(o); }
-    sel.addEventListener('change', function () { scorpioView(parseInt(sel.value, 10)); });
-    lib.appendChild(sel);
-    var any = false;
-    L.forEach(function (m, i) {
-      var nx = L[i + 1];
-      if (m.year !== year || !nx) return;
-      any = true;
-      var from = m.ts - 15 * 3600000, to = nx.ts - 15 * 3600000;     // منتصف ليل بغداد لأول يوم وللشهر التالي
-      var card = el('div', 'hcard');
-      card.appendChild(el('h3', null, MONTHS[m.month - 1] + ' ' + m.year));
-      var ps = Hilal.scorpioPeriods(from, to);
-      if (!ps.length) card.appendChild(el('p', 'msg', 'لا يمر القمر بالعقرب في هذا الشهر.'));
-      ps.forEach(function (p) {
-        var dl = el('dl', 'hdet');
-        dl.appendChild(el('dt', null, 'يدخل العقرب')); dl.appendChild(el('dd', null, fmtDT.format(new Date(p.enter))));
-        dl.appendChild(el('dt', null, 'يخرج منه')); dl.appendChild(el('dd', null, fmtDT.format(new Date(p.exit))));
-        dl.appendChild(el('dt', null, 'المدة')); dl.appendChild(el('dd', null, durText(p.exit - p.enter)));
-        card.appendChild(dl);
-      });
-      lib.appendChild(card);
-    });
-    if (!any) lib.appendChild(el('p', 'msg', 'لا بيانات لهذه السنة.'));
-  }
-
-  /* ---------- الآداب والمستحبات: قص الأظافر، الحلاقة، الأغسال ---------- */
-  var ADAB = { nails: 'قص الأظافر', haircut: 'الحلاقة', ghusl: 'الأغسال المستحبة' };
-  var WD_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  var WD_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  function todayAr() {
-    return WD_AR[WD_EN.indexOf(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Baghdad', weekday: 'long' }).format(new Date()))];
-  }
-  function adabHome() {
-    clear();
-    lib.appendChild(topbar('#/', 'الرئيسية', 'الآداب والمستحبات'));
-    lib.appendChild(el('p', 'note', 'قص الأظافر والحلاقة وفائدتهما، والأغسال المستحبة، مع ذكر المصدر. المحتوى ملخّص ويحتاج مراجعة على الأصول.'));
-    Object.keys(ADAB).forEach(function (k) {
-      var a = link('#/adab/' + k, 'row'); a.appendChild(el('span', 'rt', ADAB[k])); lib.appendChild(a);
-    });
-  }
-  function adabSection(title, rows, mk) {
-    if (!rows || !rows.length) return;
-    lib.appendChild(el('h3', 'grp', title));
-    rows.forEach(function (r) { lib.appendChild(mk(r)); });
-  }
-  function adabCard(cls, head, text, src) {
-    var c = el('div', 'adab ' + (cls || ''));
-    if (head) c.appendChild(el('b', 'ad-day', head));
-    if (text) c.appendChild(el('p', 'ad-text', text));
-    if (src) c.appendChild(el('small', 'ad-src', src));
-    return c;
-  }
-  function adabRead(kind) {
-    load('adab/' + kind + '.json').then(function (d) {
-      clear();
-      lib.appendChild(topbar('#/adab', 'الآداب والمستحبات', ''));
-      lib.appendChild(el('h2', 'rtitle', d.title));
-      if (d.note) lib.appendChild(el('p', 'note', d.note));
-      var today = todayAr();
-      adabSection('أيام الأسبوع', d.weekdays, function (r) {
-        return adabCard((r.kind || '') + (r.day === today ? ' today' : ''), 'يوم ' + r.day + (r.day === today ? ' (اليوم)' : ''), r.text, r.src);
-      });
-      adabSection('أيام الشهر', d.monthDays, function (r) { return adabCard(r.kind, r.d, r.text, r.src); });
-      adabSection('روايات عامة', d.general, function (r) { return adabCard('', '', r.text, r.src); });
-      (d.groups || []).forEach(function (g) {
-        adabSection(g.title, g.items, function (r) { return adabCard('', r.name, r.text, r.src); });
-      });
-      window.scrollTo(0, 0);
-    }).catch(fail);
-  }
-
   /* ---------- الموجّه ---------- */
   function route() {
     var h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -400,11 +347,8 @@
     if (s === 'duas' || s === 'ziyarat') h[1] ? duaRead(s, h[1]) : duaIndex(s);
     else if (s === 'nahj') { if (!h[1]) nahjHome(); else if (!NAHJ[h[1]]) nahjHome(); else h[2] ? nahjRead(h[1], h[2]) : nahjList(h[1]); }
     else if (s === 'ghurar') h[1] ? ghurarBab(h[1]) : ghurarHome();
-    else if (s === 'hilal') {
-      if (h[1] === 'scorpio') scorpioView();
-      else hilalView();
-    }
-    else if (s === 'adab') ADAB[h[1]] ? adabRead(h[1]) : adabHome();
+    else if (s === 'mafatih') h[2] ? mafatihRead(h[1], h[2]) : h[1] ? mafatihSec(h[1]) : mafatihHome();
+    else if (s === 'hilal') hilalView();
     else { location.hash = '#/'; }
   }
   window.addEventListener('hashchange', route);

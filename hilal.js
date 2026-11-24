@@ -139,30 +139,7 @@
       list[i].eve = evening(list[i].ts + 28 * DAY); list[i].evDate = list[i].ts + 28 * DAY;
     }
   }
-
-  /* ---- القمر في برج العقرب (خط الطول الظاهري للقمر بين 210° و 240° — البروج المدارية) ---- */
-  function moonLonApp(ts) { var st = state(ts); return norm(st.m.lon + st.n.dpsi); }
-  function inScorpio(ts) { var l = moonLonApp(ts); return l >= 210 && l < 240; }
-  function edgeBetween(a, b) {
-    var fa = inScorpio(a), m;
-    while (b - a > 30000) { m = (a + b) / 2; if (inScorpio(m) === fa) a = m; else b = m; }
-    return (a + b) / 2;
-  }
-  /* كل فترات بقاء القمر في العقرب التي تتقاطع مع [from, to) (UTC ms) */
-  function scorpioPeriods(from, to) {
-    var STEP = 3 * 3600000, out = [], t = from - 5 * DAY, end = to + 4 * DAY, prev = t, ps = inScorpio(t), cur = null, s, e;
-    for (t += STEP; t <= end; t += STEP) {
-      s = inScorpio(t);
-      if (s !== ps) {
-        e = edgeBetween(prev, t);
-        if (s) cur = { enter: e, exit: null };
-        else if (cur) { cur.exit = e; out.push(cur); cur = null; }
-      }
-      prev = t; ps = s;
-    }
-    return out.filter(function (p) { return p.exit > from && p.enter < to; });
-  }
-  root.Hilal = { scorpioPeriods: scorpioPeriods, moonLonApp: moonLonApp, init: init, extendTo: extendTo, fillEve: fillEve, evening: evening, sunset: sunset, state: state, moonAlt: moonAlt,
+  root.Hilal = { init: init, extendTo: extendTo, fillEve: fillEve, evening: evening, sunset: sunset, state: state, moonAlt: moonAlt,
                  conjunctionBefore: conjunctionBefore, months: function () { return list; }, cfg: CFG, site: SITE };
   if (typeof module !== 'undefined') module.exports = root.Hilal;
 })(typeof window !== 'undefined' ? window : globalThis);
