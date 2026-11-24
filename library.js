@@ -289,7 +289,7 @@
   /* ---------- أقسام الأهلة الفرعية ---------- */
   function hilalTabs(cur) {
     var t = el('div', 'tabs');
-    [['moon', 'الأهلة', '#/hilal'], ['scorpio', 'القمر في العقرب', '#/hilal/scorpio'], ['adab', 'الحلاقة والأظافر', '#/hilal/adab']].forEach(function (x) {
+    [['moon', 'الأهلة', '#/hilal'], ['scorpio', 'القمر في العقرب', '#/hilal/scorpio']].forEach(function (x) {
       t.appendChild(link(x[2], x[0] === cur ? 'on' : '', x[1]));
     });
     return t;
@@ -344,8 +344,8 @@
     if (!any) lib.appendChild(el('p', 'msg', 'لا بيانات لهذه السنة.'));
   }
 
-  /* ---------- آداب الحلاقة وقص الأظافر ---------- */
-  var ADAB = { haircut: 'الحلاقة', nails: 'قص الأظافر' };
+  /* ---------- الآداب والمستحبات: قص الأظافر، الحلاقة، الأغسال ---------- */
+  var ADAB = { nails: 'قص الأظافر', haircut: 'الحلاقة', ghusl: 'الأغسال المستحبة' };
   var WD_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var WD_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
   function todayAr() {
@@ -353,44 +353,38 @@
   }
   function adabHome() {
     clear();
-    lib.appendChild(topbar('#/', 'الرئيسية', 'توقع الأهلة'));
-    lib.appendChild(hilalTabs('adab'));
-    lib.appendChild(el('p', 'note', 'متى يُستحب ومتى يُكره، وفائدة كل يوم، كما وردت في الروايات. المحتوى ملخّص ويحتاج مراجعة على المصادر.'));
+    lib.appendChild(topbar('#/', 'الرئيسية', 'الآداب والمستحبات'));
+    lib.appendChild(el('p', 'note', 'قص الأظافر والحلاقة وفائدتهما، والأغسال المستحبة، مع ذكر المصدر. المحتوى ملخّص ويحتاج مراجعة على الأصول.'));
     Object.keys(ADAB).forEach(function (k) {
-      var a = link('#/hilal/adab/' + k, 'row'); a.appendChild(el('span', 'rt', ADAB[k])); lib.appendChild(a);
+      var a = link('#/adab/' + k, 'row'); a.appendChild(el('span', 'rt', ADAB[k])); lib.appendChild(a);
     });
   }
   function adabSection(title, rows, mk) {
+    if (!rows || !rows.length) return;
     lib.appendChild(el('h3', 'grp', title));
-    if (!rows || !rows.length) { lib.appendChild(el('p', 'msg', 'لم تُضف نصوص هذا القسم بعد.')); return; }
     rows.forEach(function (r) { lib.appendChild(mk(r)); });
+  }
+  function adabCard(cls, head, text, src) {
+    var c = el('div', 'adab ' + (cls || ''));
+    if (head) c.appendChild(el('b', 'ad-day', head));
+    if (text) c.appendChild(el('p', 'ad-text', text));
+    if (src) c.appendChild(el('small', 'ad-src', src));
+    return c;
   }
   function adabRead(kind) {
     load('adab/' + kind + '.json').then(function (d) {
       clear();
-      lib.appendChild(topbar('#/hilal/adab', 'الحلاقة والأظافر', ''));
+      lib.appendChild(topbar('#/adab', 'الآداب والمستحبات', ''));
       lib.appendChild(el('h2', 'rtitle', d.title));
       if (d.note) lib.appendChild(el('p', 'note', d.note));
       var today = todayAr();
       adabSection('أيام الأسبوع', d.weekdays, function (r) {
-        var c = el('div', 'adab ' + (r.kind || '') + (r.day === today ? ' today' : ''));
-        c.appendChild(el('b', 'ad-day', 'يوم ' + r.day + (r.day === today ? ' (اليوم)' : '')));
-        c.appendChild(el('p', 'ad-text', r.text));
-        if (r.src) c.appendChild(el('small', 'ad-src', r.src));
-        return c;
+        return adabCard((r.kind || '') + (r.day === today ? ' today' : ''), 'يوم ' + r.day + (r.day === today ? ' (اليوم)' : ''), r.text, r.src);
       });
-      adabSection('أيام الشهر', d.monthDays, function (r) {
-        var c = el('div', 'adab ' + (r.kind || ''));
-        c.appendChild(el('b', 'ad-day', r.d));
-        c.appendChild(el('p', 'ad-text', r.text));
-        if (r.src) c.appendChild(el('small', 'ad-src', r.src));
-        return c;
-      });
-      adabSection('روايات عامة', d.general, function (r) {
-        var c = el('div', 'adab');
-        c.appendChild(el('p', 'ad-text', r.text));
-        if (r.src) c.appendChild(el('small', 'ad-src', r.src));
-        return c;
+      adabSection('أيام الشهر', d.monthDays, function (r) { return adabCard(r.kind, r.d, r.text, r.src); });
+      adabSection('روايات عامة', d.general, function (r) { return adabCard('', '', r.text, r.src); });
+      (d.groups || []).forEach(function (g) {
+        adabSection(g.title, g.items, function (r) { return adabCard('', r.name, r.text, r.src); });
       });
       window.scrollTo(0, 0);
     }).catch(fail);
@@ -408,9 +402,9 @@
     else if (s === 'ghurar') h[1] ? ghurarBab(h[1]) : ghurarHome();
     else if (s === 'hilal') {
       if (h[1] === 'scorpio') scorpioView();
-      else if (h[1] === 'adab') (ADAB[h[2]] ? adabRead(h[2]) : adabHome());
       else hilalView();
     }
+    else if (s === 'adab') ADAB[h[1]] ? adabRead(h[1]) : adabHome();
     else { location.hash = '#/'; }
   }
   window.addEventListener('hashchange', route);
