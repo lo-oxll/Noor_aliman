@@ -3,7 +3,7 @@
   var R = Math.PI / 180, DAY = 86400000;
   var SITE = { lat: 31.9961, lon: 44.3317, tz: 3 };   // النجف الأشرف
   var DELTA_T = 69;                                    // ثانية (TT-UT)
-  var CFG = { MIN_V: 2 };                              // V ≥ 2 => الهلال ممكن الرؤية (بالعين أو بالمنظار)
+  var CFG = { MIN_V: 5.65 };                           // 5.65 = ممكن بالعين المجردة، 2 = ممكن بالعين أو بالمنظار
 
   function jd(ts) { return ts / DAY + 2440587.5; }
   function norm(x) { x %= 360; return x < 0 ? x + 360 : x; }
@@ -63,13 +63,45 @@
     return { ra: norm(ra / R), dec: de / R };
   }
   function gmst(ts) { var d = jd(ts) - 2451545, T = d / 36525; return norm(280.46061837 + 360.98564736629 * d + 0.000387933 * T * T); }
-  function altitude(eq, ts) {
-    var H = (gmst(ts) + SITE.lon - eq.ra) * R, p = SITE.lat * R, d = eq.dec * R;
+  function altitude(eq, ts, site) {
+    site = site || SITE;
+    var H = (gmst(ts) + site.lon - eq.ra) * R, p = site.lat * R, d = eq.dec * R;
     return Math.asin(Math.sin(p) * Math.sin(d) + Math.cos(p) * Math.cos(d) * Math.cos(H)) / R;
   }
-  function sunAlt(ts) {
+  function sunAlt(ts, site) {
     var st = state(ts), l = st.s.lon + st.n.dpsi;
-    return altitude(eqFromEcl(l, 0, st.eps), ts);
+    return altitude(eqFromEcl(l, 0, st.eps), ts, site);
+  }
+  /* مواقيت الصلاة (المذهب الجعفري — معهد ليفا/قم: الفجر 16°، المغرب 4° تحت الأفق، العشاء 14°)
+     dayUtcNoon = 12:00 UTC لليوم الميلادي المطلوب. تُرجع أزمنة UTC (ms) أو null إن لم يتحقق الحدث (عروض عالية). */
+  function transit(dayUtcNoon, site) {
+    var t = dayUtcNoon - site.lon / 15 * 3600000, i, st, eq, H;
+    for (i = 0; i < 4; i++) {
+      st = state(t); eq = eqFromEcl(st.s.lon + st.n.dpsi, 0, st.eps);
+      H = wrap(gmst(t) + site.lon - eq.ra);
+      t -= H / 360.98564736629 * DAY;
+    }
+    return t;
+  }
+  function crossing(t0, t1, angle, site, rising) {
+    var a = sunAlt(t0, site) - angle, b = sunAlt(t1, site) - angle, i, m;
+    if ((a < 0) === (b < 0)) return null;
+    for (i = 0; i < 40; i++) { m = (t0 + t1) / 2; if ((sunAlt(m, site) - angle < 0) === (a < 0)) t0 = m; else t1 = m; }
+    return (t0 + t1) / 2;
+  }
+  function prayerTimes(dayUtcNoon, site, angles) {
+    angles = angles || { fajr: -16, maghrib: -4, isha: -14 };
+    var tr = transit(dayUtcNoon, site), lo = tr - 12 * 3600000, hi = tr + 12 * 3600000;
+    var fajr = crossing(lo, tr, angles.fajr, site), sunrise = crossing(lo, tr, -0.833, site),
+        sunset = crossing(tr, hi, -0.833, site), maghrib = crossing(tr, hi, angles.maghrib, site), isha = crossing(tr, hi, angles.isha, site);
+    var mid = (sunset !== null && fajr !== null) ? sunset + ((fajr + DAY) - sunset) / 2 : null;   // منتصف الليل الشرعي: بين الغروب والفجر
+    return { fajr: fajr, sunrise: sunrise, dhuhr: tr, sunset: sunset, maghrib: maghrib, isha: isha, midnight: mid };
+  }
+  function qibla(lat, lon) {
+    var k = { lat: 21.422487 * R, lon: 39.826206 * R }, p = lat * R, dl = lon * R - k.lon;
+    // اتجاه من الموقع إلى الكعبة (من الشمال باتجاه عقارب الساعة)
+    var y = Math.sin(k.lon - lon * R), x = Math.cos(p) * Math.tan(k.lat) - Math.sin(p) * Math.cos(k.lon - lon * R);
+    return norm(Math.atan2(y, x) / R);
   }
   function moonAlt(ts, st) {
     st = st || state(ts);
@@ -114,32 +146,44 @@
   }
 
   /* ---- توليد بدايات الأشهر ---- */
-  function ymd(ts) { var d = new Date(ts); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12); }
-  var list = [];      // {ts, year, month, len, eve, official}
+  var list = [], anchorsSaved = [];
   function init(anchors, minV) {
     if (typeof minV === 'number') CFG.MIN_V = minV;
+    anchorsSaved = anchors;
     list = anchors.slice().sort(function (a, b) { return a[0] < b[0] ? -1 : 1; }).map(function (e) {
       return { ts: Date.parse(e[0] + 'T12:00:00Z'), year: e[1], month: e[2], official: true };
     });
+  }
+  function setMinV(v) { init(anchorsSaved, v); }
+  /* بداية الشهر التالي: تُحسب من اقتران ذلك الشهر القمري نفسه (أول مساء ممكن الرؤية بعد الاقتران)،
+     ثم تُقيَّد بقاعدة أن الشهر ٢٩ أو ٣٠ يوماً. فلا ينتقل خطأ شهر إلى ما بعده إلا إن كان البدء نفسه خاطئاً. */
+  function nextStart(prevTs) {
+    var c = conjunctionBefore(prevTs + 29.5 * DAY);
+    var dayNoon = Math.floor((c + SITE.tz * 3600000) / DAY) * DAY + 12 * 3600000, d, direct = null, eve29;
+    for (d = 0; d <= 3; d++) { if (evening(dayNoon + d * DAY).visible) { direct = dayNoon + (d + 1) * DAY; break; } }
+    if (direct === null) direct = dayNoon + 5 * DAY;
+    var lo = prevTs + 29 * DAY, hi = prevTs + 30 * DAY;
+    return { ts: Math.min(Math.max(direct, lo), hi), conj: c };
   }
   function extendTo(ts) {
     if (!list.length) return;
     var last = list[list.length - 1], guard = 0;
     while (last.ts <= ts && guard++ < 2000) {
-      var eve = evening(last.ts + 28 * DAY);                    // مساء التاسع والعشرين
-      last.len = eve.visible ? 29 : 30; last.eve = eve; last.evDate = last.ts + 28 * DAY;
+      var n = nextStart(last.ts);
+      last.len = Math.round((n.ts - last.ts) / DAY);
+      last.evDate = last.ts + 28 * DAY; last.eve = evening(last.evDate);   // مساء التاسع والعشرين: للعرض
       var y = last.month === 12 ? last.year + 1 : last.year, m = last.month === 12 ? 1 : last.month + 1;
-      last = { ts: last.ts + last.len * DAY, year: y, month: m, official: false };
+      last = { ts: n.ts, year: y, month: m, official: false };
       list.push(last);
     }
   }
-  function fillEve() {   // أول عناصر المصدر الرسمي: احسب مساء 29 للمعلومات
+  function fillEve() {
     for (var i = 0; i < list.length - 1; i++) if (!list[i].eve) {
       list[i].len = Math.round((list[i + 1].ts - list[i].ts) / DAY);
-      list[i].eve = evening(list[i].ts + 28 * DAY); list[i].evDate = list[i].ts + 28 * DAY;
+      list[i].evDate = list[i].ts + 28 * DAY; list[i].eve = evening(list[i].evDate);
     }
   }
-  root.Hilal = { init: init, extendTo: extendTo, fillEve: fillEve, evening: evening, sunset: sunset, state: state, moonAlt: moonAlt,
+  root.Hilal = { prayerTimes: prayerTimes, qibla: qibla, init: init, setMinV: setMinV, extendTo: extendTo, fillEve: fillEve, evening: evening, sunset: sunset, state: state, moonAlt: moonAlt,
                  conjunctionBefore: conjunctionBefore, months: function () { return list; }, cfg: CFG, site: SITE };
   if (typeof module !== 'undefined') module.exports = root.Hilal;
 })(typeof window !== 'undefined' ? window : globalThis);

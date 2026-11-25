@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>نور الإيمان</title>
 <meta name="description" content="نور الإيمان: الأدعية والزيارات الشيعية، نهج البلاغة، غرر الحكم ودرر الكلم، التقويم الهجري وتوقع الأهلة">
@@ -17,16 +18,13 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#f6f5f1">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>
-  (function(){var t;try{t=localStorage.getItem('theme')}catch(e){}
-  if(!t)t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-  document.documentElement.setAttribute('data-theme',t);})();
-</script>
+<script src="theme.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" class="sprite" width="0" height="0" aria-hidden="true">
 <symbol id="i-mosque" viewBox="0 0 576 512"><path d="M174.8 224h226.4c43.5 0 78.8-35.3 78.8-78.8 0-25.5-12.3-49.4-33.1-64.2L297.3-25.4c-5.6-3.9-13-3.9-18.5 0L129.1 81A78.74 78.74 0 0 0 96 145.2c0 43.5 35.3 78.8 78.8 78.8M512 512c35.3 0 64-28.7 64-64V224c0-17.7-14.3-32-32-32s-32 14.3-32 32v48H64v-48c0-17.7-14.3-32-32-32S0 206.3 0 224v224c0 35.3 28.7 64 64 64zM240 384c0-26.5 21.5-48 48-48s48 21.5 48 48v80h-96z"/></symbol>
 <symbol id="i-moon" viewBox="0 0 512 512"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9.4-9.8.6-14.8.6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4s-8.6-18.3-18.5-20.5C294.4 2.2 275.4 0 256 0"/></symbol>
 <symbol id="i-sun" viewBox="0 0 576 512"><path d="M178.2-10.1c7.4-3.1 15.8-2.2 22.5 2.2l87.8 58.2 87.8-58.2c6.7-4.4 15.1-5.2 22.5-2.2S411.4-.5 413 7.3l20.9 103.2 103.2 20.9c7.8 1.6 14.4 7 17.4 14.3s2.2 15.8-2.2 22.5L494.1 256l58.2 87.8c4.4 6.7 5.2 15.1 2.2 22.5s-9.6 12.8-17.4 14.3l-103.3 20.8L413 504.7c-1.6 7.8-7 14.4-14.3 17.4s-15.8 2.2-22.5-2.2l-87.8-58.2-87.8 58.2c-6.7 4.4-15.1 5.2-22.5 2.2s-12.8-9.6-14.3-17.4L143 401.4 39.7 380.5c-7.8-1.6-14.4-7-17.4-14.3s-2.2-15.8 2.2-22.5L82.7 256l-58.2-87.8c-4.4-6.7-5.2-15.1-2.2-22.5s9.6-12.8 17.4-14.3L143 110.6 163.9 7.3c1.6-7.8 7-14.4 14.3-17.4M207.6 256a80.4 80.4 0 1 1 160.8 0 80.4 80.4 0 1 1-160.8 0m208.8 0a128.4 128.4 0 1 0-256.8 0 128.4 128.4 0 1 0 256.8 0"/></symbol>
@@ -77,23 +75,30 @@
   </section>
 
   <div id="home">
+    <input id="homeSearch" class="search" type="search" placeholder="ابحث في كل الموقع (دعاء، زيارة، حكمة…)" aria-label="بحث شامل" autocomplete="off">
+    <section id="today" hidden></section>
+    <section id="resume" hidden></section>
+    <section id="favs" hidden></section>
     <section>
       <h2>المكتبة</h2>
-      <a class="item" href="#/mafatih"><span class="ic" style="--c:#6b3fa0"><svg class="i"><use href="#i-book"/></svg></span><span class="t">مفاتيح الجنان<small>الكتاب كاملاً مع الباقيات الصالحات</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
-      <a class="item" href="#/duas"><span class="ic" style="--c:#1f7a3f"><svg class="i"><use href="#i-heart"/></svg></span><span class="t">الأدعية<small>كميل، الندبة، أبو حمزة، السمات، الفرج، العهد، الصحيفة السجادية…</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
-      <a class="item" href="#/ziyarat"><span class="ic" style="--c:#b8863b"><svg class="i"><use href="#i-mosque"/></svg></span><span class="t">الزيارات<small>عاشوراء، الأربعين، أمين الله، زيارات النبي والزهراء والأئمة (ع)</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
-      <a class="item" href="#/nahj"><span class="ic" style="--c:#14532d"><svg class="i"><use href="#i-book"/></svg></span><span class="t">نهج البلاغة<small>الخطب والكتب والحِكَم</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
-      <a class="item" href="#/ghurar"><span class="ic" style="--c:#7a4a1f"><svg class="i"><use href="#i-quote"/></svg></span><span class="t">غرر الحكم ودرر الكلم<small>أكثر من أحد عشر ألف حكمة مرتّبة بالموضوعات</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/quran"><span class="ic c1"><svg class="i"><use href="#i-book"/></svg></span><span class="t">القرآن الكريم<small>١١٤ سورة برواية حفص — نص Tanzil</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/mafatih"><span class="ic c6"><svg class="i"><use href="#i-book"/></svg></span><span class="t">مفاتيح الجنان<small>الكتاب كاملاً مع الباقيات الصالحات</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/duas"><span class="ic c1"><svg class="i"><use href="#i-heart"/></svg></span><span class="t">الأدعية<small>كميل، الندبة، أبو حمزة، السمات، الفرج، العهد، الصحيفة السجادية…</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/ziyarat"><span class="ic c2"><svg class="i"><use href="#i-mosque"/></svg></span><span class="t">الزيارات<small>عاشوراء، الأربعين، أمين الله، زيارات النبي والزهراء والأئمة (ع)</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/nahj"><span class="ic c3"><svg class="i"><use href="#i-book"/></svg></span><span class="t">نهج البلاغة<small>الخطب والكتب والحِكَم</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/ghurar"><span class="ic c4"><svg class="i"><use href="#i-quote"/></svg></span><span class="t">غرر الحكم ودرر الكلم<small>أكثر من أحد عشر ألف حكمة مرتّبة بالموضوعات</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
     </section>
     <section>
       <h2>التقويم</h2>
-      <a class="item" href="#/hilal"><span class="ic" style="--c:#2b5d8a"><svg class="i"><use href="#i-crescent"/></svg></span><span class="t">توقع الأهلة<small>حساب فلكي تلقائي لبدايات الأشهر في السنوات القادمة</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/prayer"><span class="ic c3"><svg class="i"><use href="#i-sun"/></svg></span><span class="t">مواقيت الصلاة والقبلة<small>الفجر والظهر والمغرب ومنتصف الليل الشرعي، واتجاه القبلة</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/events"><span class="ic c4"><svg class="i"><use href="#i-crescent"/></svg></span><span class="t">المناسبات القادمة<small>مع إضافتها إلى تقويم الجوال</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/hilal"><span class="ic c5"><svg class="i"><use href="#i-crescent"/></svg></span><span class="t">توقع الأهلة<small>حساب فلكي تلقائي لبدايات الأشهر في السنوات القادمة</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
     </section>
   </div>
 
   <div id="lib" hidden></div>
 
-  <footer>نور الإيمان</footer>
+  <footer>نور الإيمان · <a href="#/about">المصادر والتراخيص</a></footer>
 </main>
 
 <dialog id="qrDlg">

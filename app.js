@@ -31,7 +31,9 @@
   var MONTHS = ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','شهر رمضان','شوال','ذو القعدة','ذو الحجة'];
   var DAY = 86400000;
   var approxFmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { timeZone: 'UTC', day: 'numeric', month: 'numeric', year: 'numeric' });
-  Hilal.init(MONTH_STARTS);
+  var minV = 5.65;                       // 5.65 = رؤية بالعين المجردة، 2 = أو بالمنظار
+  try { var sv = parseFloat(localStorage.getItem('hv')); if (sv === 2 || sv === 5.65) minV = sv; } catch (e) {}
+  Hilal.init(MONTH_STARTS, minV);
 
   function fromTable(ts) {
     Hilal.extendTo(ts + 2 * DAY);
@@ -108,6 +110,14 @@
     }
   }
   window.__months = MONTHS;
+  window.__occFor = occFor;
+  window.__today = { h: h, ts: ts, civilTs: civilTs, afterMaghrib: afterMaghrib };
+  window.__DAY = DAY;
+
+  /* ================= العمل دون إنترنت ================= */
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
 
   /* ================= نسخ / مشاركة / QR ================= */
   var pageUrl = location.href.split('#')[0];
