@@ -1,5 +1,7 @@
 (function () {
   var home = document.getElementById('home'), lib = document.getElementById('lib');
+  var headEl = document.querySelector('.head'), occEl = document.getElementById('occasion');
+  function chrome(show) { headEl.hidden = !show; occEl.hidden = !show; }
   var cache = {};
   var MONTHS = window.__months;
 
@@ -838,8 +840,8 @@
     stopAuto();
     var h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     applyFs();
-    if (!h.length) { readerHash = null; backBtn.hidden = true; hs.hidden = false; renderHome(); renderToday(); lib.hidden = true; home.hidden = false; document.title = 'نور الإيمان'; window.scrollTo(0, 0); return; }
-    home.hidden = true; lib.hidden = false; hs.hidden = true; backBtn.hidden = false; backBtn.href = '#/';
+    if (!h.length) { readerHash = null; backBtn.hidden = true; hs.hidden = false; chrome(true); renderHome(); renderToday(); lib.hidden = true; home.hidden = false; document.title = 'نور الإيمان'; window.scrollTo(0, 0); return; }
+    home.hidden = true; lib.hidden = false; hs.hidden = true; backBtn.hidden = false; chrome(false); backBtn.href = '#/';
     var s = h[0];
     if (s === 'duas' || s === 'ziyarat') h[1] ? duaRead(s, h[1]) : duaIndex(s);
     else if (s === 'nahj') { if (!h[1]) nahjHome(); else if (!NAHJ[h[1]]) nahjHome(); else h[2] ? nahjRead(h[1], h[2]) : nahjList(h[1]); }
