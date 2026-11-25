@@ -145,6 +145,34 @@
     return { sunset: ss, conj: conj, age: age, alt: alt, elong: arcl, V: V, zone: zone, visible: alt > 0 && age > 0 && age < 24 * 28 && V >= CFG.MIN_V };
   }
 
+
+  /* ---- القمر في العقرب: الطول الفلكي الظاهري للقمر بين 210° و 240° (البروج الاستوائية) ---- */
+  function moonLon(ts) { var st = state(ts); return norm(st.m.lon + st.n.dpsi); }
+  function inScorpio(ts) { var l = moonLon(ts); return l >= 210 && l < 240; }
+  function bisect(a, b, fa) {   // أول لحظة تتغير فيها الحالة عن fa بين a وb
+    for (var i = 0; i < 30; i++) { var m = (a + b) / 2; if (inScorpio(m) === fa) a = m; else b = m; }
+    return (a + b) / 2;
+  }
+  /* نوافذ بقاء القمر في العقرب التي تنتهي بعد fromTs وتبدأ قبل toTs: [{start,end}] (ms UTC) */
+  function scorpio(fromTs, toTs) {
+    var H = 2 * 3600000, out = [], t = fromTs - 4 * DAY, guard = 0;
+    while (t < toTs && guard++ < 100) {
+      var prev = inScorpio(t), s = null, e = null, n;
+      while (t < toTs + 4 * DAY) {
+        n = t + H;
+        var cur = inScorpio(n);
+        if (!prev && cur) { s = bisect(t, n, false); }
+        if (prev && !cur) { e = bisect(t, n, true); break; }
+        prev = cur; t = n;
+      }
+      if (e === null) break;
+      if (s === null) s = bisect(e - 4 * DAY, e - 1000, false);   // كان داخل العقرب منذ بداية المسح
+      if (e > fromTs && s < toTs) out.push({ start: s, end: e });
+      t = e + 15 * DAY;
+    }
+    return out;
+  }
+
   /* ---- توليد بدايات الأشهر ---- */
   var list = [], anchorsSaved = [];
   function init(anchors, minV) {
@@ -183,7 +211,7 @@
       list[i].evDate = list[i].ts + 28 * DAY; list[i].eve = evening(list[i].evDate);
     }
   }
-  root.Hilal = { prayerTimes: prayerTimes, qibla: qibla, init: init, setMinV: setMinV, extendTo: extendTo, fillEve: fillEve, evening: evening, sunset: sunset, state: state, moonAlt: moonAlt,
+  root.Hilal = { scorpio: scorpio, moonLon: moonLon, prayerTimes: prayerTimes, qibla: qibla, init: init, setMinV: setMinV, extendTo: extendTo, fillEve: fillEve, evening: evening, sunset: sunset, state: state, moonAlt: moonAlt,
                  conjunctionBefore: conjunctionBefore, months: function () { return list; }, cfg: CFG, site: SITE };
   if (typeof module !== 'undefined') module.exports = root.Hilal;
 })(typeof window !== 'undefined' ? window : globalThis);

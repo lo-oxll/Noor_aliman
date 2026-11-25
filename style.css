@@ -98,7 +98,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:30px}
 @media (max-width:380px){.grid,.apps{grid-template-columns:1fr}.tile.wide{grid-column:auto}}
 
 /* أزرار النسخ والمشاركة */
-.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:-4px 0 20px}
+.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:22px 0 0}
 .actions button{
   display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;
   border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:.85rem;
@@ -188,3 +188,16 @@ body.reading .libbar,body.reading .rtitle,body.reading .back{color:#d9b866}
 
 .reader.quran{font-size:calc(var(--fs) * 1.15);line-height:2.8;text-align:justify}
 .reader.quran .bsm{text-align:center;margin-bottom:.6em}
+
+/* زر الرجوع بجانب زر الوضع */
+.back-btn{text-decoration:none;color:var(--accent)}
+.back-btn[hidden]{display:none}
+.back-btn .i{width:1.3rem;height:1.3rem;transform:scaleX(-1)}
+.back-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.tools{flex:none}
+.hcard .bul{margin:6px 0 10px;padding-inline-start:1.3em;line-height:1.9;font-size:.92rem}
+.hcard .bul li{margin-bottom:4px}
+.hcard.now{border-right-color:var(--accent)}
+.warn{border-right-color:#a33}
+.warn h3{color:#a33}
+[data-theme="dark"] .warn h3{color:#e08a8a}

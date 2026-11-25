@@ -1,4 +1,4 @@
-var V = 'nooralimaan-v4';
+var V = 'nooralimaan-v5';
 var SHELL = ['./', 'index.html', 'style.css', 'theme.js', 'app.js', 'library.js', 'hilal.js', 'occasions.js', 'qrcode.js', 'logo.svg', 'manifest.webmanifest', 'search.json'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

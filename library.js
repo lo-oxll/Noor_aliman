@@ -23,10 +23,12 @@
     lib.appendChild(topbar('#/', 'الرئيسية', ''));
     lib.appendChild(el('p', 'msg', 'تعذّر تحميل المحتوى. تحقق من الاتصال ثم أعد المحاولة.'));
   }
+  var backBtn = document.getElementById('backBtn');
   function topbar(backHref, backText, title) {
+    backBtn.hidden = false; backBtn.href = backHref; backBtn.setAttribute('aria-label', 'رجوع إلى ' + backText);
+    if (!title) return document.createDocumentFragment();
     var b = el('div', 'libbar');
-    b.appendChild(link(backHref, 'back', '‹ ' + backText));
-    if (title) b.appendChild(el('h2', 'libtitle', title));
+    b.appendChild(el('h2', 'libtitle', title));
     return b;
   }
   function searchBox(ph, onInput) {
@@ -429,7 +431,8 @@
       'مفاتيح الجنان والباقيات الصالحات: قاعدة بيانات WWGTX/mafatih على GitHub (دون ترخيص معلن).',
       'نهج البلاغة: مستودع WWGTX/NahjulBalaghah على GitHub (دون ترخيص معلن).',
       'غرر الحكم: OpenITI، طبعة مصطفى درايتي (مكتبة مساحة).',
-      'توقع الأهلة: حساب فلكي بمعادلات Meeus ومعيار Odeh، في هذا الموقع.'
+      'توقع الأهلة وأوقات القمر في العقرب: حساب فلكي بمعادلات Meeus ومعيار Odeh، في هذا الموقع.',
+      'القمر في العقرب: المضمون منقول بالمعنى عن الروايات الواردة في كتب الحديث كوسائل الشيعة، فراجع المصدر الأصلي ومرجعك.'
     ].forEach(function (t) { ul.appendChild(el('li', null, t)); });
     lib.appendChild(ul);
     lib.appendChild(el('h3', 'grp', 'تنبيهات'));
@@ -497,7 +500,7 @@
     load('quran/index.json').then(function (idx) {
       clear();
       lib.appendChild(topbar('#/', 'الرئيسية', 'القرآن الكريم'));
-      lib.appendChild(el('p', 'note', 'برواية حفص عن عاصم. النص من مشروع Tanzil دون تعديل.'));
+      lib.appendChild(el('p', 'note', 'برواية حفص عن عاصم.'));
       var holder = el('div');
       var items = idx.map(function (x) { return { href: '#/quran/' + x.n, title: x.n + '. سورة ' + x.t, sub: x.m + ' — ' + x.c + ' آية' }; });
       var f = listView(items, holder);
@@ -550,6 +553,8 @@
     if (wd === 5) it('#/mafatih/2/7', 'أعمال ليلة الجمعة ونهارها', 'مفاتيح الجنان');
     it('#/mafatih/3/' + MONTH_HEAD[mh], 'أعمال شهر ' + window.__months[mh - 1], 'مفاتيح الجنان');
     if (mh === 9) it('#/mafatih/3/16', 'أعمال ليالي وأيام شهر رمضان', 'مفاتيح الجنان');
+    var sc = Hilal.scorpio(Date.now(), Date.now() + 1)[0];
+    if (sc) it('#/scorpio', 'القمر في العقرب الآن', 'يخرج منها: ' + dtText(sc.end));
   }
 
   /* ---------- مواقيت الصلاة والقبلة ---------- */
@@ -753,13 +758,88 @@
     }).catch(fail);
   }
 
+  /* ---------- القمر في العقرب ---------- */
+  var fmtDay = new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  var fmtHM = new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  function dtText(ts) { var d = new Date(ts); return fmtDay.format(d) + ' — ' + fmtHM.format(d); }
+  function spanText(ms) {
+    var h = Math.max(1, Math.round(ms / 3600000)), d = Math.floor(h / 24), r = h % 24;
+    return d ? d + (d === 1 ? ' يوم' : d === 2 ? ' يومان' : ' أيام') + (r ? ' و' + r + ' ساعة' : '') : h + ' ساعة';
+  }
+  function bullets(items) { var u = el('ul', 'bul'); items.forEach(function (t) { u.appendChild(el('li', null, t)); }); return u; }
+  function scorpioView() {
+    var now = Date.now(), W = Hilal.scorpio(now, now + 400 * DAY);
+    clear();
+    lib.appendChild(topbar('#/', 'الرئيسية', 'القمر في العقرب'));
+    var cur = W.filter(function (w) { return w.start <= now && w.end > now; })[0];
+    var nxt = W.filter(function (w) { return w.start > now; })[0];
+    var st = el('div', 'hcard' + (cur ? ' warn' : ' now'));
+    if (cur) {
+      st.appendChild(el('h3', null, 'القمر في العقرب الآن'));
+      st.appendChild(el('p', 'hstart', 'يخرج منها: ' + dtText(cur.end)));
+      st.appendChild(el('p', 'hzone zD', 'بقي نحو ' + spanText(cur.end - now) + ' (بتوقيت بغداد)'));
+    } else if (nxt) {
+      st.appendChild(el('h3', null, 'القمر ليس في العقرب الآن'));
+      st.appendChild(el('p', 'hstart', 'يدخلها: ' + dtText(nxt.start)));
+      st.appendChild(el('p', 'hzone zD', 'بعد نحو ' + spanText(nxt.start - now) + ' (بتوقيت بغداد)'));
+    }
+    lib.appendChild(st);
+
+    lib.appendChild(el('h3', 'grp', 'مواعيد الدخول والخروج'));
+    var holder = el('div'); lib.appendChild(holder);
+    chunked(W, function (w) {
+      var hd = window.__hijri(ymdIn('Asia/Baghdad', w.start)), card = el('div', 'hcard' + (w.start <= now && w.end > now ? ' warn' : ''));
+      card.appendChild(el('h3', null, 'من ' + hd.day + ' ' + MONTHS[hd.month - 1] + ' ' + hd.year + ' هـ (تقريباً)'));
+      var d = el('dl', 'hdet');
+      function row(k, v) { d.appendChild(el('dt', null, k)); d.appendChild(el('dd', null, v)); }
+      row('يدخل العقرب', dtText(w.start));
+      row('يخرج منها', dtText(w.end));
+      row('المدة', spanText(w.end - w.start));
+      card.appendChild(d); return card;
+    }, holder, 6);
+
+    var a = el('div', 'hcard warn');
+    a.appendChild(el('h3', null, 'ما ورد في أضراره'));
+    a.appendChild(el('p', 'subtitle', 'وردت في كتب الحديث (ومنها «وسائل الشيعة») روايات عن أهل البيت (عليهم السلام) في كراهة السفر والزواج والقمر في العقرب، ومضمونها أن من فعل ذلك لم يرَ الخير والحسنى فيه.'));
+    a.appendChild(bullets([
+      'قلّة البركة وعدم التوفيق في الأمر الذي يُبتدأ به في هذه الأيام.',
+      'في السفر: ما يُخشى من تعثّر الطريق ومشقّته وتأخّر قضاء الحاجة.',
+      'في الزواج: ما يُخشى من قلّة التوافق وعدم استقرار الحياة الزوجية.'
+    ]));
+    a.appendChild(el('p', 'rs', 'التفصيل في الآثار الثلاثة أعلاه مما يذكره العلماء وأهل التقاويم شرحاً للمعنى، وليس نصاً في الروايات.'));
+    lib.appendChild(a);
+
+    var b = el('div', 'hcard');
+    b.appendChild(el('h3', null, 'ما يتجنّبه الشخص في هذه الأيام'));
+    b.appendChild(bullets([
+      'عقد الزواج والزفاف (ورد فيه صراحة).',
+      'ابتداء السفر، وبخاصة الطويل منه (ورد فيه صراحة).',
+      'احتياطاً، وهو مما ذكره بعض العلماء وأهل التقاويم ولم يرد بالقدر نفسه: الشروع في المشاريع والصفقات الكبرى، وشراء الدار أو بناؤها.'
+    ]));
+    b.appendChild(el('p', 'rs', 'لا حرج في الأعمال المعتادة كالدراسة والعمل اليومي والعبادة والزيارة وقضاء الحوائج الصغيرة.'));
+    lib.appendChild(b);
+
+    var c = el('div', 'hcard');
+    c.appendChild(el('h3', null, 'إن اضطرّ إلى ذلك'));
+    c.appendChild(bullets([
+      'الحكم الكراهة لا التحريم، فيجوز عند الحاجة أو الضرورة (علاج، عمل، زيارة، تعذّر التأجيل).',
+      'تأجيل ما يمكن تأجيله نحو يومين أو ثلاثة حتى يخرج القمر من العقرب.',
+      'التصدّق بما تيسّر قبل البدء، فقد ورد أن الصدقة تدفع البلاء.',
+      'الدعاء وقراءة آية الكرسي والتوكّل على الله والاستخارة.',
+      'مراجعة مرجع التقليد، فقد تختلف الفتوى والاحتياط.'
+    ]));
+    lib.appendChild(c);
+
+    lib.appendChild(el('p', 'note', 'طريقة الحساب: يدخل القمر العقرب حين يبلغ طوله الفلكي الظاهري ٢١٠° ويخرج عند ٢٤٠° (البروج الاستوائية)، والأوقات بتوقيت بغداد وتقريبية بفارق دقائق. بعض التقاويم تعتمد البروج النجمية أو مدينة أخرى فيختلف التوقيت. المضمون الديني نقل بالمعنى فراجع المصادر الأصلية ومرجعك.'));
+  }
+
   /* ---------- الموجّه ---------- */
   function route() {
     stopAuto();
     var h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     applyFs();
-    if (!h.length) { readerHash = null; renderHome(); renderToday(); lib.hidden = true; home.hidden = false; document.title = 'نور الإيمان'; window.scrollTo(0, 0); return; }
-    home.hidden = true; lib.hidden = false;
+    if (!h.length) { readerHash = null; backBtn.hidden = true; hs.hidden = false; renderHome(); renderToday(); lib.hidden = true; home.hidden = false; document.title = 'نور الإيمان'; window.scrollTo(0, 0); return; }
+    home.hidden = true; lib.hidden = false; hs.hidden = true; backBtn.hidden = false; backBtn.href = '#/';
     var s = h[0];
     if (s === 'duas' || s === 'ziyarat') h[1] ? duaRead(s, h[1]) : duaIndex(s);
     else if (s === 'nahj') { if (!h[1]) nahjHome(); else if (!NAHJ[h[1]]) nahjHome(); else h[2] ? nahjRead(h[1], h[2]) : nahjList(h[1]); }
@@ -771,6 +851,7 @@
     else if (s === 'events') eventsView();
     else if (s === 'search') searchView(h[1] ? decodeURIComponent(h[1]) : '');
     else if (s === 'hilal') hilalView();
+    else if (s === 'scorpio') scorpioView();
     else { location.hash = '#/'; }
   }
   window.addEventListener('hashchange', route);

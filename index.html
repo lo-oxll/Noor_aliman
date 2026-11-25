@@ -45,10 +45,13 @@
       <strong class="hijri-date" id="hDate"></strong>
       <span class="hijri-greg" id="gDate"></span>
     </div>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="تبديل الوضع">
-      <svg class="i moon"><use href="#i-moon"/></svg>
-      <svg class="i sun"><use href="#i-sun"/></svg>
-    </button>
+    <div class="tools">
+      <a class="theme-btn back-btn" id="backBtn" href="#/" aria-label="رجوع" hidden><svg class="i"><use href="#i-chev"/></svg></a>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="تبديل الوضع">
+        <svg class="i moon"><use href="#i-moon"/></svg>
+        <svg class="i sun"><use href="#i-sun"/></svg>
+      </button>
+    </div>
   </div>
 
   <header class="head">
@@ -59,11 +62,7 @@
     </div>
   </header>
 
-  <div class="actions">
-    <button type="button" id="copyBtn"><svg class="i"><use href="#i-copy"/></svg><span>نسخ الرابط</span></button>
-    <button type="button" id="shareBtn" hidden><svg class="i"><use href="#i-share"/></svg><span>مشاركة</span></button>
-    <button type="button" id="qrBtn"><svg class="i"><use href="#i-qr"/></svg><span>رمز QR</span></button>
-  </div>
+  <input id="homeSearch" class="search" type="search" placeholder="ابحث في كل الموقع (دعاء، زيارة، حكمة…)" aria-label="بحث شامل" autocomplete="off">
 
   <section class="occasion" id="occasion">
     <div class="occ-icon"><svg class="i"><use href="#i-crescent"/></svg></div>
@@ -75,13 +74,12 @@
   </section>
 
   <div id="home">
-    <input id="homeSearch" class="search" type="search" placeholder="ابحث في كل الموقع (دعاء، زيارة، حكمة…)" aria-label="بحث شامل" autocomplete="off">
     <section id="today" hidden></section>
     <section id="resume" hidden></section>
     <section id="favs" hidden></section>
     <section>
       <h2>المكتبة</h2>
-      <a class="item" href="#/quran"><span class="ic c1"><svg class="i"><use href="#i-book"/></svg></span><span class="t">القرآن الكريم<small>١١٤ سورة برواية حفص — نص Tanzil</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/quran"><span class="ic c1"><svg class="i"><use href="#i-book"/></svg></span><span class="t">القرآن الكريم<small>١١٤ سورة</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
       <a class="item" href="#/mafatih"><span class="ic c6"><svg class="i"><use href="#i-book"/></svg></span><span class="t">مفاتيح الجنان<small>الكتاب كاملاً مع الباقيات الصالحات</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
       <a class="item" href="#/duas"><span class="ic c1"><svg class="i"><use href="#i-heart"/></svg></span><span class="t">الأدعية<small>كميل، الندبة، أبو حمزة، السمات، الفرج، العهد، الصحيفة السجادية…</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
       <a class="item" href="#/ziyarat"><span class="ic c2"><svg class="i"><use href="#i-mosque"/></svg></span><span class="t">الزيارات<small>عاشوراء، الأربعين، أمين الله، زيارات النبي والزهراء والأئمة (ع)</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
@@ -92,6 +90,7 @@
       <h2>التقويم</h2>
       <a class="item" href="#/prayer"><span class="ic c3"><svg class="i"><use href="#i-sun"/></svg></span><span class="t">مواقيت الصلاة والقبلة<small>الفجر والظهر والمغرب ومنتصف الليل الشرعي، واتجاه القبلة</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
       <a class="item" href="#/events"><span class="ic c4"><svg class="i"><use href="#i-crescent"/></svg></span><span class="t">المناسبات القادمة<small>مع إضافتها إلى تقويم الجوال</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
+      <a class="item" href="#/scorpio"><span class="ic c6"><svg class="i"><use href="#i-moon"/></svg></span><span class="t">القمر في العقرب<small>وقت دخوله وخروجه وما يُتجنّب في هذه الأيام</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
       <a class="item" href="#/hilal"><span class="ic c5"><svg class="i"><use href="#i-crescent"/></svg></span><span class="t">توقع الأهلة<small>حساب فلكي تلقائي لبدايات الأشهر في السنوات القادمة</small></span><svg class="i go"><use href="#i-chev"/></svg></a>
     </section>
   </div>
@@ -99,6 +98,12 @@
   <div id="lib" hidden></div>
 
   <footer>نور الإيمان · <a href="#/about">المصادر والتراخيص</a></footer>
+
+  <div class="actions">
+    <button type="button" id="copyBtn"><svg class="i"><use href="#i-copy"/></svg><span>نسخ الرابط</span></button>
+    <button type="button" id="shareBtn" hidden><svg class="i"><use href="#i-share"/></svg><span>مشاركة</span></button>
+    <button type="button" id="qrBtn"><svg class="i"><use href="#i-qr"/></svg><span>رمز QR</span></button>
+  </div>
 </main>
 
 <dialog id="qrDlg">
