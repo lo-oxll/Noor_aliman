@@ -35,6 +35,7 @@
 <symbol id="i-qr" viewBox="0 0 448 512"><path d="M64 160h64V96H64zM0 80c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48zm64 336h64v-64H64zM0 336c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48zM320 96v64h64V96zm-16-64h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48h-96c-26.5 0-48-21.5-48-48V80c0-26.5 21.5-48 48-48m-16 320a32 32 0 1 1 0-64 32 32 0 1 1 0 64m0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32m96 32c0-17.7 14.3-32 32-32s32 14.3 32 32-14.3 32-32 32-32-14.3-32-32m32-96a32 32 0 1 1 0-64 32 32 0 1 1 0 64m-32 32a32 32 0 1 1-64 0 32 32 0 1 1 64 0"/></symbol>
 <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 3h13a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 0 0 2h12v1H6a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1z"/></symbol>
 <symbol id="i-quote" viewBox="0 0 24 24"><path d="M7 7h4v4c0 3-1.5 5-4 6v-2c1.2-.7 1.8-1.7 1.8-3H7zm8 0h4v4c0 3-1.5 5-4 6v-2c1.2-.7 1.8-1.7 1.8-3H15z"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4 3.3 3.3zM5 18h14v2H5z"/></symbol>
 <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></symbol>
 </svg>
 <main class="wrap">
@@ -100,10 +101,12 @@
   <footer>نور الإيمان · <a href="#/about">المصادر والتراخيص</a></footer>
 
   <div class="actions">
+    <button type="button" id="offBtn"><svg class="i"><use href="#i-download"/></svg><span>تنزيل للعمل دون إنترنت</span></button>
     <button type="button" id="copyBtn"><svg class="i"><use href="#i-copy"/></svg><span>نسخ الرابط</span></button>
     <button type="button" id="shareBtn" hidden><svg class="i"><use href="#i-share"/></svg><span>مشاركة</span></button>
     <button type="button" id="qrBtn"><svg class="i"><use href="#i-qr"/></svg><span>رمز QR</span></button>
   </div>
+  <p class="prog offprog" id="offProg" aria-live="polite"></p>
 </main>
 
 <dialog id="qrDlg">

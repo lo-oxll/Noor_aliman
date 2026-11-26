@@ -408,13 +408,17 @@
       urls.push('duas/index.json', 'ghurar/index.json', 'mafatih/index.json');
       var done = 0, fails = 0, i = 0;
       function next() {
-        if (i >= urls.length) { prog.textContent = fails ? 'اكتمل مع ' + fails + ' ملفاً تعذّر تنزيله.' : 'تم التنزيل. المحتوى متاح الآن دون إنترنت.'; btn.disabled = false; return; }
+        if (i >= urls.length) { prog.textContent = fails ? 'اكتمل مع ' + fails + ' ملفاً تعذّر تنزيله.' : 'تم التنزيل. المحتوى متاح الآن دون إنترنت.'; btn.disabled = false; if (!fails) { sset('off', 1); offLabel(); } return; }
         var u = urls[i++];
         fetch(u).then(function (x) { if (!x.ok) fails++; }, function () { fails++; }).then(function () { done++; prog.textContent = done + ' / ' + urls.length; next(); });
       }
       next();
     }).catch(function () { prog.textContent = 'تعذّر التنزيل.'; btn.disabled = false; });
   }
+  var offBtn = document.getElementById('offBtn'), offProg = document.getElementById('offProg');
+  function offLabel() { offBtn.querySelector('span').textContent = sget('off', 0) ? 'تحديث المحتوى المحمّل' : 'تنزيل للعمل دون إنترنت'; }
+  offLabel();
+  offBtn.addEventListener('click', function () { cacheAll(offBtn, offProg); });
   function aboutView() {
     clear();
     lib.appendChild(topbar('#/', 'الرئيسية', 'المصادر والتراخيص'));

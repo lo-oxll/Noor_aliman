@@ -203,3 +203,5 @@ body.reading .libbar,body.reading .rtitle,body.reading .back{color:#d9b866}
 [data-theme="dark"] .warn h3{color:#e08a8a}
 
 .head[hidden],.occasion[hidden]{display:none}
+.offprog{text-align:center;margin:10px 0 0}
+.actions button:disabled{opacity:.6;cursor:progress}
