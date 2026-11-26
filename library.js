@@ -179,6 +179,8 @@
   }
 
   /* ---------- الأدعية والزيارات ---------- */
+  var DFOLDER = { d: 'duas', s: 'sahifa', z: 'ziyarat' };
+  function duaUrl(m) { return (DFOLDER[m.c] || 'duas') + '/' + m.id + '.json'; }
   function duaIndex(kind) {
     load('duas/index.json').then(function (idx) {
       clear();
@@ -201,9 +203,13 @@
     }).catch(fail);
   }
   function duaRead(kind, id) {
-    Promise.all([load('duas/index.json'), load('duas/' + id + '.json')]).then(function (r) {
-      var meta = r[0].filter(function (x) { return x.id === id; })[0];
+    load('duas/index.json').then(function (idx) {
+      var meta = idx.filter(function (x) { return x.id === id; })[0];
       if (!meta) return fail();
+      return load(duaUrl(meta)).then(function (data) { return [idx, data, meta]; });
+    }).then(function (r) {
+      if (!r) return;
+      var meta = r[2];
       clear();
       lib.appendChild(topbar('#/' + kind, kind === 'ziyarat' ? 'الزيارات' : 'الأدعية', ''));
       lib.appendChild(el('h2', 'rtitle', meta.t));
@@ -424,7 +430,7 @@
       var urls = [];
       for (var qn = 1; qn <= 114; qn++) urls.push('quran/' + qn + '.json');
       urls.push('quran/index.json', 'search.json');
-      r[0].forEach(function (x) { urls.push('duas/' + x.id + '.json'); });
+      r[0].forEach(function (x) { urls.push(duaUrl(x)); });
       r[1].forEach(function (x) { urls.push('ghurar/' + x.id + '.json'); });
       r[2].forEach(function (x) { urls.push('mafatih/' + x.id + '.json'); });
       ['khutab', 'kutub', 'hikam'].forEach(function (k) { urls.push('nahj/' + k + '.json'); });
@@ -724,7 +730,7 @@
       function runOne() {
         if (idx >= jobs.length) return Promise.resolve();
         var j = jobs[idx++], url, p;
-        if (j[0] === 'd') p = load('duas/' + j[1].id + '.json').then(function (d) {
+        if (j[0] === 'd') p = load(duaUrl(j[1])).then(function (d) {
           var hit = d.filter(has)[0]; if (hit) add(j[1].c === 'z' ? 'زيارة' : 'دعاء', (j[1].c === 'z' ? '#/ziyarat/' : '#/duas/') + j[1].id, j[1].t, hit);
         });
         else if (j[0] === 'n') p = load('nahj/' + j[1] + '.json').then(function (d) {
